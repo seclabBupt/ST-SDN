@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: ubuntu-ovs
+  name: ubuntu-ovs
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ubuntu-ovs
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: ubuntu-ovs
+    spec:
+      containers:
+      - image: seclabdockerhub/sdnlabdockerhub:ubuntu-ovs1.0
+        name: ubuntu
+        resources: {}
+        command: ["/bin/bash","-c","--"]
+        args: ["while true; do sleep 30; done;"]
+        securityContext:
+          privileged: true
+      nodeSelector:
+        node: node-0
+status: {}
