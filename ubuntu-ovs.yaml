@@ -25,6 +25,4 @@ spec:
         args: ["while true; do sleep 30; done;"]
         securityContext:
           privileged: true
-      nodeSelector:
-        node: node-0
 status: {}
