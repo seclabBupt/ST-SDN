@@ -303,6 +303,24 @@ kubectl delete pods [podsname] #删除pods
 ```
 
 ## 4. 镜像
+### 4.0 docker hub
+```bash
+#使用方法:（以上传ubuntu镜像为例）
+#  首先使用docker在本地DIY需要的容器
+#  然后使用commit命令将容器打包为镜像
+#  再使用tag命令标记镜像
+#  使用docker login命令登录到镜像仓库
+#  使用docker push命令上传镜像
+#  finished！~
+#  （option）上docker hub 查看镜像是否上传成功
+
+#具体操作如下：
+docker run -itd --name ubuntu --privileged=true --network=host ubuntu /bin/bash #运行ubuntu容器
+docker commit ubuntu ubuntu-ovs #将ubuntu容器打包为镜像，并命名为ubuntu-ovs
+docker tag ubuntu-ovs seclabdockerhub/sdnlabdockerhub:ubuntu-ovs1.0 #将ubuntu-ovs镜像标记为seclabdockerhub/sdnlabdockerhub:ubuntu-ovs1.0
+docker login seclabdockerhub #然后按提示输入密码
+docker pull seclabdockerhub/sdnlabdockerhub:ubuntu-ovs1.0 #上传镜像到镜像仓库
+```
 ### 4.1 ubuntu镜像
 ```bash
 enable:ubuntu18.04
