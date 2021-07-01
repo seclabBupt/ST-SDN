@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: onos
+  name: onos
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: onos
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: onos
+    spec:
+      containers:
+      - image: onosproject/onos
+        name: onos
+        resources: {}
+status: {}
