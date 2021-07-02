@@ -106,6 +106,14 @@ curl -sfL http://rancher-mirror.cnrancher.com/k3s/k3s-install.sh | INSTALL_K3S_M
 
 #需要将https://myserver:6443 替换为server地址，K3S_TOKEN替换为上一步获得的token
 ```
+- kubectl
+```bash
+#angent节点使用kubectl命令需要加k3s
+k3s kubectl get pods
+
+#或者可以使用alias命令重链接kucectl命令
+alias kubectl='k3s kubectl'
+```
 ### 2.4 在agent节点设置kubeconfig配置文件
 ```bash
 #在server节点root用户下
