@@ -309,6 +309,14 @@ bin  dev  etc  home  lib  lib64  lost+found  media  mnt  opt  proc  root  run  s
 
 kubectl delete pods [podsname] #删除pods
 ```
+### 3.4 删除一个服务
+```bash
+#如3.1中所说，如果以deployment的形式部署服务，当pods运行故障时，k3s为保障服务运行不间断会重新创建一个相同服务的pods。因此当我们需要删除一个服务时，直接删除pods后，k3s还会创建相同的pods。
+#正确做法是直接删除deployment。
+
+kubectl delete deployment servername
+
+```
 
 ## 4. 镜像
 ### 4.0 docker hub
