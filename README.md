@@ -378,5 +378,42 @@ ovsdb-server /etc/openvswitch/conf.db \
 --detach --monitor
 ```
 ### 4.3 onos镜像
+- 创建pods
+```bash
+kubectl apply -f onos.yaml #yaml文件已经上传，可以使用git下载。
+```
+- 进入pods
+```bash
+kubectl exec -it podsname bash
 
+#成功进入pods后使用以下ssh命令进入onos CLI
+ssh -p 8101 karaf@127.0.0.1 #账户和密码都是karaf
+
+#结果如：
+root@onos-6774f9f77-wmvjc:~/onos# ssh -p 8101 karaf@127.0.0.1
+The authenticity of host '[127.0.0.1]:8101 ([127.0.0.1]:8101)' can't be established.
+RSA key fingerprint is SHA256:tmbWqpKSgFhJFfayVWyxcayRaxvTGsSSM0BYlDYUujQ.
+Are you sure you want to continue connecting (yes/no)? yes
+Warning: Permanently added '[127.0.0.1]:8101' (RSA) to the list of known hosts.
+Password authentication
+Password: 
+Welcome to Open Network Operating System (ONOS)!
+     ____  _  ______  ____     
+    / __ \/ |/ / __ \/ __/   
+   / /_/ /    / /_/ /\ \     
+   \____/_/|_/\____/___/     
+                               
+Documentation: wiki.onosproject.org      
+Tutorials:     tutorials.onosproject.org 
+Mailing lists: lists.onosproject.org     
+
+Come help out! Find out how at: contribute.onosproject.org 
+
+Hit '<tab>' for a list of available commands
+and '[cmd] --help' for help on a specific command.
+Hit '<ctrl-d>' or type 'logout' to exit ONOS session.
+
+karaf@root >                                                                                                                                                             
+
+```
 
