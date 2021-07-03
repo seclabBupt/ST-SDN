@@ -18,7 +18,7 @@ spec:
         app: onos
     spec:
       containers:
-      - image: seclabdockerhub/sdnlabdockerhub:onos1.0
+      - image: seclabdockerhub/sdnlabdockerhub:onos1.1
         name: onos
         resources: {}
 status: {}
