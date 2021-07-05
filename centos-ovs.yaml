@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: centos-ovs
+  name: centos-ovs
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: centos-ovs
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: centos-ovs
+    spec:
+      containers:
+      - image: seclabdockerhub/sdnlabdockerhub:centos-ovs1.0
+        name: sdnlabdockerhub
+        command: ["/usr/sbin/init","-c","--"]
+        args: ["while true; do sleep 30; done;"]
+        securityContext:
+          privileged: true
+        resources: {}
+status: {}
