@@ -17,7 +17,7 @@ server节点/agent节点：
 ### 2.2 server节点部署
 1. docker安装
 ```bash
-sudo apt-get insatll docker.io
+sudo apt-get install docker.io
 ```
 2. k3s安装
 ```bash
