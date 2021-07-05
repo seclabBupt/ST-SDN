@@ -349,7 +349,7 @@ kubectl apply -f ubuntu.yaml
 #如果要部署多个ubuntu pod可以修改yaml文件里面的 replicas: 1
 ```
 
-### 4.2 ovs镜像
+### 4.2 ubuntu-ovs镜像(存在bug，不推荐使用)
 ```bash
 enable:ubuntu18.04
 vim、git、ping、ifcong、pthon3.8、pip3
@@ -377,7 +377,29 @@ ovsdb-server /etc/openvswitch/conf.db \
 --pidfile=/var/run/openvswitch/ovsdb-server.pid \
 --detach --monitor
 ```
-### 4.3 onos镜像
+### 4.3 centos-ovs镜像
+```bash
+kubectl apply -f centos-ovs.yaml
+
+#进入容器后需要启动ovs：
+
+ovs-vswitchd unix:/var/run/openvswitch/db.sock \
+-vconsole:emer -vsyslog:err -vfile:info --mlockall --no-chdir \
+--log-file=/var/log/openvswitch/ovs-vswitchd.log \
+--pidfile=/var/run/openvswitch/ovs-vswitchd.pid \
+--detach --monitor
+
+ovsdb-server /etc/openvswitch/conf.db \
+-vconsole:emer -vsyslog:err -vfile:info \
+--remote=punix:/var/run/openvswitch/db.sock \
+--private-key=db:Open_vSwitch,SSL,private_key \
+--certificate=db:Open_vSwitch,SSL,certificate \
+--bootstrap-ca-cert=db:Open_vSwitch,SSL,ca_cert --no-chdir \
+--log-file=/var/log/openvswitch/ovsdb-server.log \
+--pidfile=/var/run/openvswitch/ovsdb-server.pid \
+--detach --monitor
+```
+### 4.4 onos镜像
 - 创建pods
 ```bash
 kubectl apply -f onos.yaml #yaml文件已经上传，可以使用git下载。
