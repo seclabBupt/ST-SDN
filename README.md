@@ -335,7 +335,7 @@ docker run -itd --name ubuntu --privileged=true --network=host ubuntu /bin/bash 
 docker commit ubuntu ubuntu-ovs #将ubuntu容器打包为镜像，并命名为ubuntu-ovs
 docker tag ubuntu-ovs seclabdockerhub/sdnlabdockerhub:ubuntu-ovs1.0 #将ubuntu-ovs镜像标记为seclabdockerhub/sdnlabdockerhub:ubuntu-ovs1.0
 docker login seclabdockerhub #然后按提示输入密码
-docker pull seclabdockerhub/sdnlabdockerhub:ubuntu-ovs1.0 #上传镜像到镜像仓库
+docker push seclabdockerhub/sdnlabdockerhub:ubuntu-ovs1.0 #上传镜像到镜像仓库
 ```
 ### 4.1 ubuntu镜像
 ```bash
