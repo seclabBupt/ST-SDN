@@ -382,7 +382,7 @@ ovsdb-server /etc/openvswitch/conf.db \
 kubectl apply -f centos-ovs.yaml
 
 #进入容器后需要启动ovs：
-
+/usr/share/openvswitch/scripts/ovs-ctl start
 ovs-vswitchd unix:/var/run/openvswitch/db.sock \
 -vconsole:emer -vsyslog:err -vfile:info --mlockall --no-chdir \
 --log-file=/var/log/openvswitch/ovs-vswitchd.log \
@@ -438,4 +438,92 @@ Hit '<ctrl-d>' or type 'logout' to exit ONOS session.
 karaf@root >                                                                                                                                                             
 
 ```
+## 5.1 ovs连接onos控制器
+- 部署ovs镜像以及onos镜像
+```bash
+#下载配置文件
+git clone https://github.com/seclabBupt/ST-SDN.git ./ 
+cd ST-SDN
+kubectl apply -f centos-ovs.yaml onos.yaml
+```
+- onos控制器开启openflow服务
+```bash
+#查看onos pod的ip
+kubectl get pods -o wide
 
+#使用ssh连接到onos终端，账户和密码都是karaf（可以在centos-ovs容器中，或者在宿主机本地执行ssh命令
+ssh -p 8101 karaf@<pods ip>
+
+#开启服务
+app activat org.onosproject.fwd 
+app activate org.onosproject.openflow
+
+#查看已经启动的服务
+apps -s -a 
+
+#结果为：
+karaf@root > apps -s -a                                                                                                                    02:08:58
+*   3 org.onosproject.drivers              2.6.0.SNAPSHOT Default Drivers
+*   4 org.onosproject.optical-model        2.6.0.SNAPSHOT Optical Network Model
+*  21 org.onosproject.hostprovider         2.6.0.SNAPSHOT Host Location Provider
+*  57 org.onosproject.openflow-base        2.6.0.SNAPSHOT OpenFlow Base Provider
+*  58 org.onosproject.lldpprovider         2.6.0.SNAPSHOT LLDP Link Provider
+*  78 org.onosproject.openflow             2.6.0.SNAPSHOT OpenFlow Provider Suite
+*  96 org.onosproject.gui2                 2.6.0.SNAPSHOT ONOS GUI2
+* 121 org.onosproject.fwd                  2.6.0.SNAPSHOT Reactive Forwarding
+```
+- ovs连接到onos控制器
+```bash
+#查看容器id
+kubectl get pods -o wide
+
+#进入ovs容器
+kubectl exec -it <pods id> bash
+
+#初始化ovs
+/usr/share/openvswitch/scripts/ovs-ctl start
+
+ovs-vswitchd unix:/var/run/openvswitch/db.sock \
+-vconsole:emer -vsyslog:err -vfile:info --mlockall --no-chdir \
+--log-file=/var/log/openvswitch/ovs-vswitchd.log \
+--pidfile=/var/run/openvswitch/ovs-vswitchd.pid \
+--detach --monitor
+
+ovsdb-server /etc/openvswitch/conf.db \
+-vconsole:emer -vsyslog:err -vfile:info \
+--remote=punix:/var/run/openvswitch/db.sock \
+--private-key=db:Open_vSwitch,SSL,private_key \
+--certificate=db:Open_vSwitch,SSL,certificate \
+--bootstrap-ca-cert=db:Open_vSwitch,SSL,ca_cert --no-chdir \
+--log-file=/var/log/openvswitch/ovsdb-server.log \
+--pidfile=/var/run/openvswitch/ovsdb-server.pid \
+--detach --monitor
+
+#创建网桥
+ovs-vsctl add-br br0
+
+#连接onos控制器
+ovs-vsctl set-controller br0 tcp:<controller IP>:6653
+
+#操作结果为：
+[root@centos-ovs-599566bc64-2vm49 /]# ovs-vsctl show
+a1d3ace8-dd69-4650-8c86-81f7b5c29378
+    Bridge "br0"
+        Controller "tcp:10.42.0.16:6653"
+            is_connected: true        #出现该行表示连接成功
+        Port "br0"
+            Interface "br0"
+                type: internal
+    ovs_version: "2.11.0"
+```
+- 登录onos GUI查看拓扑
+```bash
+#查看onos pod id
+kubectl get pods
+
+#开启集群端口代理(将本地的8181端口映射到pod的8181端口)
+kubectl port-forward pod/<pod id> 8181:8181
+
+#打开浏览器，进入GUI
+http://127.0.0.1:8181/onos/ui/    #账号密码都是karaf
+```
