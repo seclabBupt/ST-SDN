@@ -528,3 +528,5 @@ kubectl port-forward pod/<pod id> 8181:8181
 #打开浏览器，进入GUI
 http://127.0.0.1:8181/onos/ui/    #账号密码都是karaf
 ```
+操作结果为：
+![](img/ovs1.png)
