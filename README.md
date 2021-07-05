@@ -445,7 +445,7 @@ karaf@root >
 #下载配置文件
 git clone https://github.com/seclabBupt/ST-SDN.git ./ 
 cd ST-SDN
-kubectl apply -f centos-ovs.yaml onos.yaml
+kubectl apply -f centos-ovs.yaml -f onos.yaml
 ```
 - onos控制器开启openflow服务
 ```bash
