@@ -438,7 +438,8 @@ Hit '<ctrl-d>' or type 'logout' to exit ONOS session.
 karaf@root >                                                                                                                                                             
 
 ```
-## 5.1 ovs连接onos控制器
+## 5.部署
+### 5.1 ovs连接onos控制器
 - 部署ovs镜像以及onos镜像
 ```bash
 #下载配置文件
