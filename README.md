@@ -456,7 +456,7 @@ kubectl get pods -o wide
 ssh -p 8101 karaf@<pods ip>
 
 #开启服务
-app activat org.onosproject.fwd 
+app activate org.onosproject.fwd 
 app activate org.onosproject.openflow
 
 #查看已经启动的服务
