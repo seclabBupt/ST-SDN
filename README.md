@@ -555,6 +555,93 @@ http://127.0.0.1:8181/onos/ui/    #账号密码都是karaf
 操作结果为：
 ![](img/ovs1.png)
 
+### 5.2 ovs之间连接
+- 准备条件
+1. onos容器 × 1 
+2. ovs容器 × 2 (以下为了便于区分，分为ovs_1,ovs_2)
+- 配置onos控制器
+参考5.1
+- 配置ovs_1
+```bash
+kubectl exec -it <pods name> bash
+
+/usr/share/openvswitch/scripts/ovs-ctl start
+
+ovs-vswitchd unix:/var/run/openvswitch/db.sock \
+-vconsole:emer -vsyslog:err -vfile:info --mlockall --no-chdir \
+--log-file=/var/log/openvswitch/ovs-vswitchd.log \
+--pidfile=/var/run/openvswitch/ovs-vswitchd.pid \
+--detach --monitor
+
+ovsdb-server /etc/openvswitch/conf.db \
+-vconsole:emer -vsyslog:err -vfile:info \
+--remote=punix:/var/run/openvswitch/db.sock \
+--private-key=db:Open_vSwitch,SSL,private_key \
+--certificate=db:Open_vSwitch,SSL,certificate \
+--bootstrap-ca-cert=db:Open_vSwitch,SSL,ca_cert --no-chdir \
+--log-file=/var/log/openvswitch/ovsdb-server.log \
+--pidfile=/var/run/openvswitch/ovsdb-server.pid \
+--detach --monitor
+
+ovs-vsctl add-br br0
+ip netns add nsvm1
+ip netns add nsvm2
+ip link add tap1 type veth peer name tap2
+ip link add tap3 type veth peer name tap4
+ip link set tap1 netns nsvm1
+ip link set tap3 netns nsvm2
+ip netns exec nsvm1 ip addr add 192.168.0.11/24 dev tap1
+ip netns exec nsvm2 ip addr add 192.168.0.12/24 dev tap3
+ip netns exec nsvm1 ip link set tap1 up
+ip netns exec nsvm2 ip link set tap3 up
+ip link set tap2 up
+ip link set tap4 up
+ovs-vsctl add-port br0 tap2
+ovs-vsctl add-port br0 tap4
+
+ip link add vxlan0 type vxlan id 42 dstport 4789 remote 10.42.0.14 local 10.42.0.12 dev eth0
+ip addr add 20.0.0.1/24 dev vxlan0
+ovs-vsctl add-port br0 vxlan0
+ip link set vxlan0 up
+
+ovs-vsctl set-controller br0 tcp:10.42.0.13:6653
+```
+- ovs_2
+```bash
+ovs-vsctl add-br br0
+ip netns add nsvm1
+ip netns add nsvm2
+ip link add tap1 type veth peer name tap2
+ip link add tap3 type veth peer name tap4
+ip link set tap1 netns nsvm1
+ip link set tap3 netns nsvm2
+ip netns exec nsvm1 ip addr add 192.168.0.13/24 dev tap1
+ip netns exec nsvm2 ip addr add 192.168.0.14/24 dev tap3
+ip netns exec nsvm1 ip link set tap1 up
+ip netns exec nsvm2 ip link set tap3 up
+ip link set tap2 up
+ip link set tap4 up
+ovs-vsctl add-port br0 tap2
+ovs-vsctl add-port br0 tap4
+
+10.42.0.14:
+ip link add vxlan0 type vxlan id 42 dstport 4789 remote 10.42.0.12 local 10.42.0.14 dev eth0
+ip addr add 20.0.0.2/24 dev vxlan0
+ovs-vsctl add-port br0 vxlan0
+ip link set vxlan0 up
+
+ovs-vsctl set-controller br0 tcp:10.42.0.13:6653
+```
+
+- ping一遍全部节点（以ovs_1为例）
+```bash
+ip netns exec nsvm2 ping 192.168.0.12
+ip netns exec nsvm2 ping 192.168.0.13
+ip netns exec nsvm2 ping 192.168.0.14
+```
+- 登录GUI观察结果
+
+
 ## 一些bug的解决方法
 ### 1. pods无法上网
 ```bash
