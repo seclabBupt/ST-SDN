@@ -328,8 +328,18 @@ kubectl delete deployment servername
 
 ### 3.5 调度一个pods到指定节点
 在k3s/k8s中，调度一个pods到指定节点可以使用nodeSelect标签
-![](img/3.5-1/png)
+![](img/3.5-1.jpg)
 ```bash
+#操作流程：
+#  1. 给指定节点设置label
+#  2. 修改yaml文件
+#  3. 部署服务
+
+# 以修改centos-ovs.yaml为例，该yaml文件可以在本仓库下载:git clone git clone https://github.com/seclabBupt/ST-SDN.git ./ST-SDN
+
+kubectl label node [nodename] node=[node label name] #将nodename改为需要部署服务的节点的名称，node label name可以自定义
+vim centos.yaml #修改为上图所示，node label name改为自定义的name
+kubectl apply -f centos-ovs.yaml
 ```
 
 ## 4. 镜像
