@@ -554,3 +554,12 @@ http://127.0.0.1:8181/onos/ui/    #账号密码都是karaf
 ```
 操作结果为：
 ![](img/ovs1.png)
+
+## 一些bug的解决方法
+### 1. pods无法上网
+```bash
+#使用ifconfig命令查看网卡。如果没有docker0、cni0网卡，需要将k3s卸载后重新安装k3s
+cd /usr/local/bin
+./k3s-killall.sh
+./k3s-uninstall.sh
+```
