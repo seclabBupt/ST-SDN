@@ -547,7 +547,7 @@ a1d3ace8-dd69-4650-8c86-81f7b5c29378
 kubectl get pods
 
 #开启集群端口代理(将本地的8181端口映射到pod的8181端口)
-kubectl port-forward pod/<pod id> 8181:8181
+kubectl port-forward --address 0.0.0.0 pod/<pod id> 8181:8181
 
 #打开浏览器，进入GUI
 http://127.0.0.1:8181/onos/ui/    #账号密码都是karaf
