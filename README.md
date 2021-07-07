@@ -31,7 +31,7 @@ sudo apt-get install docker.io
 ```bash
 curl -sfL http://rancher-mirror.cnrancher.com/k3s/k3s-install.sh | INSTALL_K3S_MIRROR=cn sh -
 ```
-3. dashboard安装
+3. dashboard安装(option)
 - 获取配置文件
 ```bash
 sudo su #切换到root用户（需要在root用户下才能对k3s、docker进行操作）
