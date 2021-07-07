@@ -559,6 +559,10 @@ http://127.0.0.1:8181/onos/ui/    #账号密码都是karaf
 - 准备条件
 1. onos容器 × 1 
 2. ovs容器 × 2 (以下为了便于区分，分为ovs_1,ovs_2)
+```bash
+#修改centos-ovs.yaml文件,将 replicas: 1 改为replicas: 2,然后再使用kubectl apply部署
+#如果centos-ovs.yaml已经部署的话,使用kubectl edit deploy centos-ovs 命令修改replicas
+```
 - 配置onos控制器
 参考5.1
 - 配置ovs_1
