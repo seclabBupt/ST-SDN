@@ -563,8 +563,6 @@ http://127.0.0.1:8181/onos/ui/    #账号密码都是karaf
 参考5.1
 - 配置ovs_1
 ```bash
-kubectl exec -it <pods name> bash
-
 /usr/share/openvswitch/scripts/ovs-ctl start
 
 ovs-vswitchd unix:/var/run/openvswitch/db.sock \
@@ -608,6 +606,24 @@ ovs-vsctl set-controller br0 tcp:10.42.0.13:6653
 ```
 - ovs_2
 ```bash
+/usr/share/openvswitch/scripts/ovs-ctl start
+
+ovs-vswitchd unix:/var/run/openvswitch/db.sock \
+-vconsole:emer -vsyslog:err -vfile:info --mlockall --no-chdir \
+--log-file=/var/log/openvswitch/ovs-vswitchd.log \
+--pidfile=/var/run/openvswitch/ovs-vswitchd.pid \
+--detach --monitor
+
+ovsdb-server /etc/openvswitch/conf.db \
+-vconsole:emer -vsyslog:err -vfile:info \
+--remote=punix:/var/run/openvswitch/db.sock \
+--private-key=db:Open_vSwitch,SSL,private_key \
+--certificate=db:Open_vSwitch,SSL,certificate \
+--bootstrap-ca-cert=db:Open_vSwitch,SSL,ca_cert --no-chdir \
+--log-file=/var/log/openvswitch/ovsdb-server.log \
+--pidfile=/var/run/openvswitch/ovsdb-server.pid \
+--detach --monitor
+
 ovs-vsctl add-br br0
 ip netns add nsvm1
 ip netns add nsvm2
