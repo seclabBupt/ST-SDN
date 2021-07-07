@@ -326,6 +326,12 @@ kubectl delete deployment servername
 
 ```
 
+### 3.5 调度一个pods到指定节点
+在k3s/k8s中，调度一个pods到指定节点可以使用nodeSelect标签
+![]()
+```bash
+```
+
 ## 4. 镜像
 ### 4.0 docker hub
 ```bash
