@@ -89,7 +89,7 @@ k3s kubectl -n kubernetes-dashboard describe secret admin-user-token | grep '^to
 ```
 - 开启dashboard http代理
 ```bash
-k3s kubectl proxy
+k3s kubectl proxy --address 0.0.0.0 
 ```
 - 登陆dashboard
 ```bash
