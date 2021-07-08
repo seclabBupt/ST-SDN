@@ -375,8 +375,8 @@ kubectl apply -f ubuntu.yaml
 
 ### 4.2 ubuntu-ovs镜像(存在bug，不推荐使用)
 ```bash
-enable:ubuntu18.04
-vim、git、ping、ifcong、pthon3.8、pip3
+#enable:ubuntu18.04  ovs:2.13.0
+#vim、git、ping、ifcong、pthon3.8、pip3
 
 git clone https://github.com/seclabBupt/ST-SDN.git
 cd ST-SDN
@@ -403,6 +403,7 @@ ovsdb-server /etc/openvswitch/conf.db \
 ```
 ### 4.3 centos-ovs镜像
 ```bash
+#enable:centos7   ovs：2.11.0
 kubectl apply -f centos-ovs.yaml
 
 #进入容器后需要启动ovs：
