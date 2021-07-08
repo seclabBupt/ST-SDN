@@ -659,7 +659,7 @@ ip netns exec nsvm2 ping 192.168.0.12
 ip netns exec nsvm2 ping 192.168.0.13
 ip netns exec nsvm2 ping 192.168.0.14
 ```
-- 登录GUI观察结果
+- 登录GUI观察结果  
 按h显示host
 ![](img/5.2-1.png)
 
