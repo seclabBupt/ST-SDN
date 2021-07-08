@@ -655,9 +655,9 @@ ovs-vsctl set-controller br0 tcp:10.42.0.13:6653
 
 - ping一遍全部节点（以ovs_1为例）
 ```bash
-ip netns exec nsvm2 ping 192.168.0.12
-ip netns exec nsvm2 ping 192.168.0.13
-ip netns exec nsvm2 ping 192.168.0.14
+ip netns exec nsvm1 ping 192.168.0.12
+ip netns exec nsvm1 ping 192.168.0.13
+ip netns exec nsvm1 ping 192.168.0.14
 ```
 - 登录GUI观察结果  
 按h显示host
