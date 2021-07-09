@@ -16,7 +16,7 @@ ovsdb-server /etc/openvswitch/conf.db \
 --pidfile=/var/run/openvswitch/ovsdb-server.pid \
 --detach --monitor
 
-#´´½¨ÍøÇÅ
+#create bridge
 ovs-vsctl add-br s1
 ovs-vsctl add-br s2
 ovs-vsctl add-br s3
