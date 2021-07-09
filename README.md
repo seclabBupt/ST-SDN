@@ -702,6 +702,26 @@ ovs-vsctl set Interface s2p1 type=patch
 ovs-vsctl set Interface s2p1 options:peer=s1p1
 ovs-vsctl set-controller s1 tcp:<controller ip>:6653
 ```
+- 创建用户
+```bash
+ip netns add ns1
+ip netns add ns2
+ip link add tap1 type veth peer name tap2
+ip link add tap3 type veth peer name tap4
+ip link set tap1 netns ns1
+ip link set tap3 netns ns2
+ip netns exec ns1 ip addr add 192.168.0.11/24 dev tap1
+ip netns exec ns2 ip addr add 192.168.0.12/24 dev tap3
+ip netns exec ns1 ip link set tap1 up
+ip netns exec ns2 ip link set tap3 up
+ip link set tap2 up
+ip link set tap4 up
+ovs-vsctl add-port s1 tap2
+ovs-vsctl add-port s2 tap4
+
+#ping一下host2查看是否连通
+ip netns exec nsvm1 ping 192.168.0.12
+```
 - 登录GUI查看拓扑
 ```bash
 #查看onos pod id
@@ -713,8 +733,8 @@ kubectl port-forward --address 0.0.0.0 pod/<pod id> 8181:8181
 #打开浏览器，进入GUI
 http://127.0.0.1:8181/onos/ui/    #账号密码都是karaf
 ```
-  - 操作结果为：
-![]()
+- 操作结果为：
+![](img/5.2.2-1.png)
 
 ## 一些bug的解决方法
 ### 1. pods无法上网
