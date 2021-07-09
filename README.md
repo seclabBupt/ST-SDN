@@ -557,6 +557,7 @@ http://127.0.0.1:8181/onos/ui/    #账号密码都是karaf
 ![](img/ovs1.png)
 
 ### 5.2 ovs之间连接
+#### 5.2.1 不同pods之间的ovs连接（vxlan）
 - 准备条件
 1. onos容器 × 1 
 2. ovs容器 × 2 (以下为了便于区分，分为ovs_1,ovs_2)
@@ -663,6 +664,57 @@ ip netns exec nsvm1 ping 192.168.0.14
 - 登录GUI观察结果  
 按h显示host
 ![](img/5.2-1.png)
+#### 5.2.2 同一pods内的ovs连接
+- 准备条件
+1. onos容器 × 1
+2. ovs容器 × 1
+- 配置onos控制器（参考5.1）
+- 配置ovs
+```bash
+/usr/share/openvswitch/scripts/ovs-ctl start
+
+ovs-vswitchd unix:/var/run/openvswitch/db.sock \
+-vconsole:emer -vsyslog:err -vfile:info --mlockall --no-chdir \
+--log-file=/var/log/openvswitch/ovs-vswitchd.log \
+--pidfile=/var/run/openvswitch/ovs-vswitchd.pid \
+--detach --monitor
+
+ovsdb-server /etc/openvswitch/conf.db \
+-vconsole:emer -vsyslog:err -vfile:info \
+--remote=punix:/var/run/openvswitch/db.sock \
+--private-key=db:Open_vSwitch,SSL,private_key \
+--certificate=db:Open_vSwitch,SSL,certificate \
+--bootstrap-ca-cert=db:Open_vSwitch,SSL,ca_cert --no-chdir \
+--log-file=/var/log/openvswitch/ovsdb-server.log \
+--pidfile=/var/run/openvswitch/ovsdb-server.pid \
+--detach --monitor
+
+ovs-vsctl add-br s1
+ovs-vsctl add-port s1 s1p1
+ovs-vsctl set Interface s1p1 type=patch
+ovs-vsctl set Interface s1p1 options:peer=s2p1
+ovs-vsctl set-controller s1 tcp:<controller ip>:6653
+
+
+ovs-vsctl add-br s2
+ovs-vsctl add-port s2 s2p1
+ovs-vsctl set Interface s2p1 type=patch
+ovs-vsctl set Interface s2p1 options:peer=s1p1
+ovs-vsctl set-controller s1 tcp:<controller ip>:6653
+```
+- 登录GUI查看拓扑
+```bash
+#查看onos pod id
+kubectl get pods
+
+#开启集群端口代理(将本地的8181端口映射到pod的8181端口)
+kubectl port-forward --address 0.0.0.0 pod/<pod id> 8181:8181
+
+#打开浏览器，进入GUI
+http://127.0.0.1:8181/onos/ui/    #账号密码都是karaf
+```
+  - 操作结果为：
+![]()
 
 ## 一些bug的解决方法
 ### 1. pods无法上网
