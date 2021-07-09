@@ -662,7 +662,7 @@ ip netns exec nsvm1 ping 192.168.0.13
 ip netns exec nsvm1 ping 192.168.0.14
 ```
 - 登录GUI观察结果  
-按h显示host
+按h显示host，按 / 显示更多快捷操作
 ![](img/5.2-1.png)
 #### 5.2.2 同一pods内的ovs连接
 - 准备条件
