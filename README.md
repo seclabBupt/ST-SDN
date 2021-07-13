@@ -720,7 +720,7 @@ ovs-vsctl add-port s1 tap2
 ovs-vsctl add-port s2 tap4
 
 #ping一下host2查看是否连通
-ip netns exec nsvm1 ping 192.168.0.12
+ip netns exec ns1 ping 192.168.0.12
 ```
 - 登录GUI查看拓扑
 ```bash
