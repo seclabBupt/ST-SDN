@@ -764,8 +764,9 @@ yum install ffmpeg ffmpeg-devel -y
 rpm -Uvh http://nginx.org/packages/centos/7/noarch/RPMS/nginx-release-centos-7-0.el7.ngx.noarch.rpm
 yum install -y nginx
 
-#配置nginx，如下图所示
-vim /etc/nginx/nginx.conf
+#配置nginx
+vim /etc/nginx/nginx.conf #修改为下图所示
+systemctl restart nginx
 ```
 ![](img/6.1-1.png)
 
