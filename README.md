@@ -736,6 +736,73 @@ http://127.0.0.1:8181/onos/ui/    #账号密码都是karaf
 - 操作结果为：
 ![](img/5.2.2-1.png)
 
+## 6. 视频推流
+### 6.1 srs + ffmpeg
+- 环境准备
+1. centos-ovs pod × 1（网桥拓扑参考本仓库中test文件夹下的topology_1.sh）
+2. onos × 1
+- Attention！！！：
+1. 该部分操作比较繁琐，容易出bug，需要仔细检查是否进入正确的namespace进行操作；
+2. 该部分非常占资源，请保证操作环境有8G及以上的内存，4核及以上的CPU（内存+多核保证多项任务可以同时运行，cpu主频过低推流会掉帧）；
+3. 部署流程中，默认已经搭好网桥拓扑,并连上控制器;
+4. 部署流程中，默认已经开器centos-ovs pod的8080端口，8181端口代理。（port-forward命令）
+4. 部署流程中，我们使用host4（ns4，192.168.0.14）作为srs服务器，使用centos-ovs pod本身连接s1网桥，在centos-ovs pod（10.42.0.10，此ip因环境而异）部署nginx反向代理，将10.42.0.10:8080的流量代理到192.168.0.14:8080，最后将10.42.0.10的8080端口使用port-forward暴露到宿主机8080端口，在chrome环境下（其他浏览器暂未测试）访问 [宿主机ip:8080] 观看实时推送的视频流。
+
+- 部署
+```bash
+#进入centos-ovs pod后编译安装srs，使用yum安装ffmpeg
+
+git clone -b 3.0release https://gitee.com/ossrs/srs.git &&
+cd srs/trunk && ./configure && make
+
+yum install -y epel-release
+rpm --import http://li.nux.ro/download/nux/RPM-GPG-KEY-nux.ro
+rpm -Uvh http://li.nux.ro/download/nux/dextop/el7/x86_64/nux-dextop-release-0-5.el7.nux.noarch.rpm
+yum install ffmpeg ffmpeg-devel -y
+
+#yum安装nginx
+rpm -Uvh http://nginx.org/packages/centos/7/noarch/RPMS/nginx-release-centos-7-0.el7.ngx.noarch.rpm
+yum install -y nginx
+
+#配置nginx，如下图所示
+vim /etc/nginx/nginx.conf
+```
+![](img/6.1-1.png)
+
+```bash
+#路由表配置
+ifconfig s1 192.168.0.1/24 up
+route add -net 192.168.0.0/24 gw 192.168.0.1
+
+#ns4配置(配置srs服务)
+ip netns exec ns4 bash
+ifconfig lo up
+cd /srs/trunk
+./objs/srs -c conf/srs.conf
+tail -f ./objs/srs.log
+
+#ns4配置（配置ffmpeg推流,重新打开一个shell）
+ip netns exec ns4 bash
+cd /srs/trunk
+for((;;)); do \
+    ffmpeg -re -i ./doc/source.200kbps.768x320.flv \
+    -vcodec copy -acodec copy \
+    -f flv -y rtmp://192.168.0.14/live/livestream; \
+    sleep 1; \
+done
+```
+
+- 查看视频流
+
+在浏览器中输入 [宿主机ip:8080] 查看视频流
+![](img/6.1-2.png)
+
+- Issue
+1. 为什么不制作srs镜像？
+    srs服务使用镜像在k3s环境下部署后，无法正常开启服务，会出现端口流量拥塞的bug。多次测试发现实际在pod中编译安装srs才可以成功开启服务，后期会继续肝制作srs镜像的方法。
+2. 为什么不使用h1（192.168.0.11）访问h4（192.168.0.14）而是使用pod本身（10.42.0.10）？
+    我们为s1设置ip（192.168.0.1/24），并在10.42.0.10上增加路由表以后，10.42.0.10本身就相当一个host，因此可以通过路径10.42.0.10->s1 -> s3/s4/s5 -> s2 -> h4访问到h4。使用10.42.0.10本身可以比使用192.168.0.11少一层反向代理，在保证效果相同的同时降低操作复杂度。
+
 ## 一些bug的解决方法
 ### 1. pods无法上网
 ```bash
