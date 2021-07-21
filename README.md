@@ -159,6 +159,24 @@ vim k3s.yaml #粘贴server节点中k3s.yaml内容，并将其中ip换成server�
 kubectl get nodes #能够正确显示节点 则说明kubeconfig配置成功
 ```
 
+### 2.5 k3s高可用集群
+- HA
+> 高可用（HA）模式是目前分布式集群的一个重要指标，k3s HA架构可以在rancher在官网查阅相关资料：https://docs.rancher.cn/docs/k3s/architecture/_index
+> 简单来说，HA就是有多个管理节点，其中一个管理节点down不影响整个集群运作。rancher官网指出HA模式需要有奇数个server。我们以三个server为例进行构建
+- 搭建
+```bash
+#我们首先使用一键脚本在节点1创建k3s server，然后获取token再其余节点再用脚本创建剩下的serer
+
+#节点1
+curl -sfL http://rancher-mirror.cnrancher.com/k3s/k3s-install.sh | INSTALL_K3S_MIRROR=cn sh -s - server --cluster-init
+
+#节点2（需要获取节点1的token，在节点1上执行 cat /var/lib/rancher/k3s/server/node-token
+curl -sfL http://rancher-mirror.cnrancher.com/k3s/k3s-install.sh | INSTALL_K3S_MIRROR=cn K3S_TOKEN=<token> sh -s - server --server https://<node ip>:6443
+
+#节点3（同节点2）
+curl -sfL http://rancher-mirror.cnrancher.com/k3s/k3s-install.sh | INSTALL_K3S_MIRROR=cn K3S_TOKEN=<token> sh -s - server --server https://<node ip>:6443
+```
+
 ## 3. kubectl基本操作
 k8s/k3s 一般都使用kubectl命令管理集群
 kubectl命令语句结构一般是：kubectl + 操作方法（get、create、edit、delete、exec、describe）+ 资源类型（pods、nodes、deployment、ingress、service）+ 资源名称
