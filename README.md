@@ -825,6 +825,167 @@ done
     
     我们为s1设置ip（192.168.0.1/24），并在10.42.0.10上增加路由表以后，10.42.0.10本身就相当一个host，因此可以通过路径10.42.0.10->s1 -> s3/s4/s5 -> s2 -> h4访问到h4。使用10.42.0.10本身可以比使用192.168.0.11少一层反向代理，在保证效果相同的同时降低操作复杂度。
 
+## 6.2 srs + obs +nginx 实现直播推流
+### 6.2.0 序
+> 6.1的教程本质上还是一个实验性质的教程，在写教程时我为了避免内容过多，精简了原理部分的内容，也因此让大家实际部署起来遇到了很多不便。
+> 直播部分操作更加复杂，为了让大家从原理上了解这一整套框架，避免部署时候发生意想不到的问题，在这部分我打算先从架构开始阐述部署原理。
+
+### 6.2.1 底层架构
+![](img/6.2-1.png) 
+> 上图主机1和主机2对应了我们交换机可能出现的 一个pod一个交换机 的部署方法，一个pod多个交换机的原理更加简单，这里就不多加赘述。
+
+> flannel是k3s中，构建跨主机pod通信的一个代理隧道。通过这个隧道使得集群内的所有的pod都处于10.42.0.0/16的网段中。
+> eth0是pod的虚拟网卡，它本质上也是一个veth，一端接到了pod中，另一端接到了flanned，从而实现pod的对外通信。
+> ens33是我们虚拟机的网卡，我们不同虚拟机之间通信，虚拟机同外部通信都是通过ens33实现。
+
+> ovs之间的vxlan隧道，本质上是通过了ovs ->eth0 -> flannel -> ens33 -> ens33 -> flannel -> eth0 ->ovs这样的路径实现的，gre隧道同理。
+
+> 在对上述原理有了基础的了解后，我们就可以知道ns和ns之间要想通信，就得实现ns1 -> pod1 ->  主机1 -> 主机2 -> pod2 -> ns2 这样一个路径。而实际上，我们还可以发现eth0和ovs实际上是连到一起的（通过配置网桥ip和路由），我们ns1和ns2通信，与pod1和ns2通信效果是等同的，这样实际部署时候就可以少一层反向代理，提高架构性能。
+
+### 6.2.2 直播系统架构
+![](img/6.2-2.png)
+> 上图中，最上面的一部分通常是我们刚刚配置完拓扑后的一个网络状况，eth0和ovs是没有连到一起的。我们需要为网桥配置ip，并在pod中配置路由，实现pod和namespace的连接。
+
+> 直播系统架构可以分为三部分：
+> 1. 负责推流的主机PC2  
+>     我们需要在PC2用docker部署srs，然后用obs向srs推流 ，最后还要在pod4，NS2中部署反向代理，实现流量从128.0.0.12（8080、1935）转发到192.168.2.14（8080，1935）.
+> 2. 负责构建网桥拓扑的主机群PC3、PC4  
+> 3. 负责拉流的主机PC1  
+>     我们需要在PC2上登录srs的web播放器，拉取视频流（Firefox、Chrome均可），最后还有在pod1上部署反向代理，实现流量从10.42.0.11（8080、1935）转发到128.0.0.12（8080、1935）.
+
+### 6.2.4 部署
+- PC1
+```bash
+#1. 部署centos-ovs
+#2. 配置网桥拓扑，最后为网桥设置ip，为pod设置路由
+#3. 编译安装nginx
+#4. 配置反向代理
+#
+#第1部分的操作略。
+#第2部分命令如下，注意修改ip，以及vxlan id。
+/usr/share/openvswitch/scripts/ovs-ctl start
+
+ovs-vswitchd unix:/var/run/openvswitch/db.sock \
+-vconsole:emer -vsyslog:err -vfile:info --mlockall --no-chdir \
+--log-file=/var/log/openvswitch/ovs-vswitchd.log \
+--pidfile=/var/run/openvswitch/ovs-vswitchd.pid \
+--detach --monitor
+
+ovsdb-server /etc/openvswitch/conf.db \
+-vconsole:emer -vsyslog:err -vfile:info \
+--remote=punix:/var/run/openvswitch/db.sock \
+--private-key=db:Open_vSwitch,SSL,private_key \
+--certificate=db:Open_vSwitch,SSL,certificate \
+--bootstrap-ca-cert=db:Open_vSwitch,SSL,ca_cert --no-chdir \
+--log-file=/var/log/openvswitch/ovsdb-server.log \
+--pidfile=/var/run/openvswitch/ovsdb-server.pid \
+--detach --monitor
+
+ovs-vsctl add-br s1
+ip netns add ns1
+ip link add tap1 type veth peer name ovs-tap1
+ip link set tap1 netns ns1
+ip netns exec ns1 ip addr add 128.0.0.11/24 dev tap1
+ip netns exec ns1 ip link set tap1 up
+ip link set ovs-tap1 up
+ovs-vsctl add-port s1 ovs-tap1
+
+ip link add vxlan0 type vxlan id 42 dstport 4789 remote 10.42.0.43 local 10.42.0.42 dev eth0
+ip addr add 20.0.0.1/24 dev vxlan0
+ovs-vsctl add-port s1 vxlan0
+ip link set vxlan0 up
+
+ovs-vsctl set-controller s1 tcp:10.42.0.24:6653
+
+ifconfig s1 128.0.0.1/24 up
+route add -net 128.0.0.0/24 gw 128.0.0.1
+
+#第3部分操作如下，在pod1中操作就行，不要进入ns1
+wget http://nginx.org/download/nginx-1.21.1.tar.gz
+tar -zxvf nginx-1.21.1.tar.gz
+cd nginx-1.21.1
+./configure --with-stream
+make
+make install
+
+#第4部分操作如下，在pod1中操作就行，不要进入ns1
+cd /
+vim /usr/local/nginx/conf/nginx.conf   #修改为下图所示，注意ip
+```
+![](img/6.2-4.png)
+```bash
+./usr/local/nginx/sbin/nginx  #保存后启动nginx
+```
+
+- PC2、PC3
+```bash
+#略，详情参考第5部分的5.1及5.2。
+```
+- pc4
+```bash
+#1. 部署centos-ovs
+#2. 配置网桥拓扑，最后为网桥设置ip，为pod设置路由
+#3. 编译安装nginx
+#4. 为pod4配置反向代理
+#5. 为ns4配置反向代理，并为ns4配置到pod4的路由
+
+#第1-3部分参考pc1配置
+#第4部分配置如下，不要进人ns4，在pod4执行即可
+cd /
+vim /usr/local/nginx/conf/nginx.conf  #配置如下图所示
+```
+![](img/6.2-5.png)
+```bash
+./usr/local/nginx/sbin/nginx   #启动nginx
+
+#第5部分配置如下，进入ns4！进入ns4！进入ns4！！！
+ip netns exec ns4 bash
+vim /usr/local/nginx/conf/nginx.conf    #修改为下图所示
+```
+![](img/6.2-6.png)
+
+```bash
+./usr/local/nginx/sbin/nginx   #启动nginx
+
+#这里pod4和ns4共享同一份物理资源，因此在ns4中打开的nginx.conf是之前配置是pod4的nginx.conf。在ns4中修改该文件并启动，不会影响pod4。ns4和pod4网络环境是完全独立的，因此执行两个nginx没有影响。
+```
+### 6.2.4 配置srs
+```bash
+#1. 在pc4中用docker运行srs
+
+#操作如下，在pc4，不是pod4！在pc4，不是pod4！在pc4，不是pod4！！！
+docker run --rm -it -p 1935:1935 -p 1985:1985 -p 8080:8080 \
+    --env CANDIDATE=$(ifconfig en0 inet| grep 'inet '|awk '{print $2}') -p 8000:8000/udp \
+    ossrs/srs ./objs/srs -c conf/srs.conf
+```
+### 6.2.5 配置obs
+- 下载obs及ffmpeg
+```bash
+sudo add-apt-repository ppa:kirillshkrogalev/ffmpeg-next
+sudo apt-get update
+sudo apt-get install ffmpeg
+sudo add-apt-repository ppa:obsproject/obs-studio
+sudo apt-get update
+sudo apt-get install obs-studio
+```
+- 配置obs
+1. 配置推流地址
+![](img/6.2-7.png)
+
+2. 调整码率
+![](img/6.2-8.png) 
+
+3. 添加源
+![](img/6.2-9.png)
+
+4. 选择源并推流
+![](img/6.2-10.png)
+
+### 6.2.6 拉流
+> 在PC浏览器中打开10.42.0.11:8080，按默认的播放地址播放即可
+![](img/6.2-3.png)
+
+
 ## 一些bug的解决方法
 ### 1. pods无法上网
 ```bash
