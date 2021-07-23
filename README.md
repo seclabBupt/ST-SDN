@@ -969,16 +969,16 @@ sudo apt-get update
 sudo apt-get install obs-studio
 ```
 - 配置obs
-1. 配置推流地址
+1. 配置推流地址  
 ![](img/6.2-7.png)
 
-2. 调整码率
+2. 调整码率  
 ![](img/6.2-8.png) 
 
-3. 添加源
+3. 添加源  
 ![](img/6.2-9.png)
 
-4. 选择源并推流
+4. 选择源并推流  
 ![](img/6.2-10.png)
 
 ### 6.2.6 拉流
