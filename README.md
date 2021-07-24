@@ -970,7 +970,8 @@ sudo apt-get update
 sudo apt-get install obs-studio
 ```
 - 配置obs
-1. 配置推流地址  
+1. 配置推流地址
+> 密钥是livestream  
 ![](img/6.2-7.png)
 
 2. 调整码率  
