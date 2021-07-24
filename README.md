@@ -835,7 +835,7 @@ done
 > 上图主机1和主机2对应了我们交换机可能出现的 一个pod一个交换机 的部署方法，一个pod多个交换机的原理更加简单，这里就不多加赘述。
 
 > flannel是k3s中，构建跨主机pod通信的一个代理隧道。通过这个隧道使得集群内的所有的pod都处于10.42.0.0/16的网段中。
-> eth0是pod的虚拟网卡，它本质上也是一个veth，一端接到了pod中，另一端接到了flanned，从而实现pod的对外通信。
+> eth0是pod的虚拟网卡，它本质上也是一个veth，一端接到了pod中，另一端接到了flannel，从而实现pod的对外通信。
 > ens33是我们虚拟机的网卡，我们不同虚拟机之间通信，虚拟机同外部通信都是通过ens33实现。
 
 > ovs之间的vxlan隧道，本质上是通过了ovs ->eth0 -> flannel -> ens33 -> ens33 -> flannel -> eth0 ->ovs这样的路径实现的，gre隧道同理。
@@ -940,6 +940,7 @@ vim /usr/local/nginx/conf/nginx.conf  #配置如下图所示
 
 #第5部分配置如下，进入ns4！进入ns4！进入ns4！！！
 ip netns exec ns4 bash
+route add -net 10.42.0.0/16 gw 128.0.0.12
 vim /usr/local/nginx/conf/nginx.conf    #修改为下图所示
 ```
 ![](img/6.2-6.png)
