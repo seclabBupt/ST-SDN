@@ -946,6 +946,7 @@ vim /usr/local/nginx/conf/nginx.conf    #修改为下图所示
 
 ```bash
 ./usr/local/nginx/sbin/nginx   #启动nginx
+route add -net 10.42.0.0/16 gw 128.0.0.12   #为ns4增加到10.42.0.0/16网段的路由
 
 #这里pod4和ns4共享同一份物理资源，因此在ns4中打开的nginx.conf是之前配置是pod4的nginx.conf。在ns4中修改该文件并启动，不会影响pod4。ns4和pod4网络环境是完全独立的，因此执行两个nginx没有影响。
 ```
