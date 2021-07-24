@@ -940,7 +940,6 @@ vim /usr/local/nginx/conf/nginx.conf  #配置如下图所示
 
 #第5部分配置如下，进入ns4！进入ns4！进入ns4！！！
 ip netns exec ns4 bash
-route add -net 10.42.0.0/16 gw 128.0.0.12
 vim /usr/local/nginx/conf/nginx.conf    #修改为下图所示
 ```
 ![](img/6.2-6.png)
